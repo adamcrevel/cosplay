@@ -24,7 +24,7 @@ class _FakeResponse:
 def test_missing_api_key_raises_immediately(monkeypatch):
     monkeypatch.delenv(API_KEY_ENV_VAR, raising=False)
     with pytest.raises(ImageProviderError, match=API_KEY_ENV_VAR):
-        PollinationsProvider(model="black-forest-labs/flux.1-kontext-pro")
+        PollinationsProvider(model="openai/gpt-image-1.5")
 
 
 def test_explicit_api_key_overrides_env(monkeypatch):

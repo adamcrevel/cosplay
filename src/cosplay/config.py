@@ -10,8 +10,12 @@ from pathlib import Path
 DEFAULT_ANALYSIS_MODEL = "claude"
 
 #: Default Pollinations.ai model for the identity-preserving image edit.
+#: `paid_only: false` and ~0.000024 Pollen/image in Pollinations' live
+#: catalog (`GET /v1/models`) -- 1,250x cheaper than the Flux Kontext models,
+#: chosen specifically so a single free Quest Pollen claim covers a
+#: personal-use lifetime instead of running out after a handful of images.
 #: See https://gen.pollinations.ai/docs -> Image -> /v1/images/edits.
-DEFAULT_IMAGE_MODEL = "black-forest-labs/flux.1-kontext-pro"
+DEFAULT_IMAGE_MODEL = "openai/gpt-image-1.5"
 
 #: Default number of candidate costumes the analysis step proposes.
 DEFAULT_CANDIDATE_COUNT = 4

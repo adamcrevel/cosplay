@@ -7,10 +7,11 @@ one allowed to shell out to `gh`.
 
 Setup (one-time, manual -- see the project README): create a secret key at
 https://enter.pollinations.ai/keys (Sign in with GitHub), then export it as
-`POLLINATIONS_API_KEY`. The Flux Kontext edit model requires the account's
-"seed" tier or higher; a brand-new free account may need to reach that tier
-before `/v1/images/edits` accepts requests -- see the dashboard at
-enter.pollinations.ai.
+`POLLINATIONS_API_KEY`. Pollinations retired its hourly free-Pollen refill;
+claim a one-off Quest on the dashboard for free Pollen before creating the
+key, or the first request fails with a 402 until there's a balance to
+spend. At this module's default model's price (~0.000024 Pollen/image), one
+small Quest claim covers tens of thousands of images.
 """
 
 import base64
@@ -34,7 +35,7 @@ class PollinationsProvider(ImageProvider):
 
         Args:
             model: Pollinations model id, e.g.
-                `"black-forest-labs/flux.1-kontext-pro"`.
+                `"openai/gpt-image-1.5"`.
             api_key: Secret key to use. Falls back to the
                 `POLLINATIONS_API_KEY` env var when omitted; never hardcoded.
             timeout: Request timeout in seconds.
