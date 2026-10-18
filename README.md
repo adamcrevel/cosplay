@@ -27,27 +27,64 @@ Two other CLIs must already be installed and authenticated:
 - [`gh`](https://cli.github.com/) — publishes the gist. Run `gh auth login`
   (with the `gist` scope) if you haven't already.
 
-## One manual setup step: a Pollinations.ai key
+## One manual setup step: a Pollinations.ai key (free-tier friendly)
 
 Image generation calls [Pollinations.ai](https://pollinations.ai)'s
-`/v1/images/edits` endpoint (the Flux Kontext model), which needs a secret
-key. This step needs **your own** GitHub login in a browser, so it can't be
-done on your behalf — do this once:
+`/v1/images/edits` endpoint. This needs **your own** GitHub login in a
+browser, so it can't be done on your behalf — do this once:
 
-1. Go to **<https://enter.pollinations.ai/keys>**.
-2. Click **"Sign in with GitHub"** and authorize it.
-3. Create a new **secret key** (`sk_...`) with image-generation permission.
-4. Export it:
+1. Go to **<https://enter.pollinations.ai/keys>** and click **"Sign in with
+   GitHub"**. No payment method is requested anywhere in this flow.
+2. **Claim free Pollen before creating a key.** Pollinations retired its
+   hourly free-Pollen refill; the only Pollen that costs nothing now comes
+   from one-off **Quests** on the dashboard (e.g. "make your first API
+   call", "link GitHub") — look for a "Quests" link/tab after signing in and
+   claim whatever's available. Skipping this is fine too; it just means your
+   balance starts at 0 and the first real request fails with a `402` until
+   you claim something (see the balance check below) — no surprise charge
+   either way, 402 just means "nothing to spend."
+3. Click **"Create secret key"** (or **"+ New key"**). In the dialog:
+   - **Budget** — a numeric Pollen cap. This only *limits* spending from
+     Pollen you already have; it is not a card charge and nothing is ever
+     auto-billed unless you separately buy Pollen. Set it low as a safety
+     ceiling — `1` is roughly 30+ generated images at this model's price
+     (see the cost note below) — the default (`5`) works too.
+   - **Expiry** — defaults to 7 days. If the dialog offers a longer option
+     (30/90 days, or no expiry), pick that for a personal tool you'll keep
+     using; otherwise you'll need to regenerate the key weekly.
+   - **Models / permissions** — this is the part that controls whether the
+     key can actually call image generation. Look for a "Models" or "Model
+     access" section and check the **"image"** category (covers
+     `black-forest-labs/flux.1-kontext-pro`, this project's default, plus
+     any model you swap to later), or search for and select that exact
+     model id if you'd rather scope it tighter. Leave the separate
+     **account permissions** (sometimes labeled `profile`/`usage`/`keys`)
+     unchecked — this CLI only ever generates images, never manages the
+     account.
+4. Copy the `sk_...` value shown (usually shown once) and export it:
    ```sh
    export POLLINATIONS_API_KEY=sk_...
    ```
    (Add that line to your shell profile to keep it across sessions. Never
    commit it — `.gitignore` already excludes `.env`.)
-5. The Kontext edit model requires the account's "seed" tier or higher. A
-   brand-new key may need to reach that tier before `/v1/images/edits`
-   accepts requests — check your account status on the
-   [dashboard](https://enter.pollinations.ai) if `cosplay run` reports a
-   `402` from Pollinations.
+5. **Verify it actually took**, with two read-only calls that need no extra
+   permission on the key:
+   ```sh
+   # Confirms the key is valid and shows what it's permitted to call:
+   curl -H "Authorization: Bearer $POLLINATIONS_API_KEY" https://gen.pollinations.ai/account/key
+   # Confirms there's Pollen on it to actually spend:
+   curl -H "Authorization: Bearer $POLLINATIONS_API_KEY" https://gen.pollinations.ai/account/balance
+   ```
+   A `0` balance means step 2's Quest Pollen wasn't claimed (or there wasn't
+   any available) — `cosplay run` will reach image generation and fail with
+   a clear `402` from Pollinations.ai until there's something to spend.
+
+**Cost, for context:** `black-forest-labs/flux.1-kontext-pro` (this
+project's default) is `paid_only: false` in Pollinations' own catalog
+(`GET /v1/models`) — meaning it works against ordinary (including free
+Quest) Pollen, not only purchased Pollen — at `0.03` Pollen per generated
+image (Pollen is priced at $1 each), i.e. about 3 cents' worth of Pollen per
+run if you ever do top up.
 
 ## Usage
 

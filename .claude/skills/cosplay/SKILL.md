@@ -35,8 +35,9 @@ per photo.
   (analysis, image generation, or gist publish). Surface the exact error
   text to the user; the most common cause is a missing `POLLINATIONS_API_KEY`
   (see the project README's "One manual setup step") or a `402` meaning the
-  Pollinations.ai account hasn't reached the tier the edit model needs —
-  both require the user's own action, not a retry from here.
+  Pollinations.ai account has no Pollen balance to spend (free Pollen now
+  only comes from claiming a Quest on the dashboard) — both require the
+  user's own action, not a retry from here.
 - **Exit 2** — bad input (missing file, unsupported image type). Fix the
   path/format and re-run.
 
