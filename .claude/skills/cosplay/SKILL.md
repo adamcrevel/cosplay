@@ -33,11 +33,13 @@ per photo.
   bug.
 - **Exit 1 with an `error: ...` line on stderr** — an actual failure
   (analysis, image generation, or gist publish). Surface the exact error
-  text to the user; the most common cause is a missing `POLLINATIONS_API_KEY`
-  (see the project README's "One manual setup step") or a `402` meaning the
-  Pollinations.ai account has no Pollen balance to spend (free Pollen now
-  only comes from claiming a Quest on the dashboard) — both require the
-  user's own action, not a retry from here.
+  text to the user. The key is normally already set up (`~/.cosplay/pollinations_key`
+  or `POLLINATIONS_API_KEY` — see the project README's "One manual setup
+  step"), so a missing-key error here means that file/var genuinely isn't
+  present, not a transient issue. A `402` means the Pollinations.ai account
+  has no Pollen balance to spend (free Pollen now only comes from claiming
+  a Quest on the dashboard) — both require the user's own action, not a
+  retry from here.
 - **Exit 2** — bad input (missing file, unsupported image type). Fix the
   path/format and re-run.
 

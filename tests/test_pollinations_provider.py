@@ -5,6 +5,7 @@ import base64
 import pytest
 import requests
 
+import cosplay.providers.pollinations as pollinations_module
 from cosplay.providers.base import ImageProviderError
 from cosplay.providers.pollinations import API_KEY_ENV_VAR, PollinationsProvider
 
@@ -21,14 +22,42 @@ class _FakeResponse:
         return self._json_data
 
 
-def test_missing_api_key_raises_immediately(monkeypatch):
+def test_missing_api_key_and_no_key_file_raises_immediately(monkeypatch, tmp_path):
     monkeypatch.delenv(API_KEY_ENV_VAR, raising=False)
+    monkeypatch.setattr(pollinations_module, "DEFAULT_KEY_FILE", tmp_path / "no-such-file")
     with pytest.raises(ImageProviderError, match=API_KEY_ENV_VAR):
         PollinationsProvider(model="black-forest-labs/flux.1-kontext-pro")
 
 
 def test_explicit_api_key_overrides_env(monkeypatch):
     monkeypatch.delenv(API_KEY_ENV_VAR, raising=False)
+    provider = PollinationsProvider(model="m", api_key="sk_explicit")
+    assert provider._api_key == "sk_explicit"
+
+
+def test_falls_back_to_key_file_when_env_var_absent(monkeypatch, tmp_path):
+    monkeypatch.delenv(API_KEY_ENV_VAR, raising=False)
+    key_file = tmp_path / "pollinations_key"
+    key_file.write_text("sk_from_file\n")
+    monkeypatch.setattr(pollinations_module, "DEFAULT_KEY_FILE", key_file)
+    provider = PollinationsProvider(model="m")
+    assert provider._api_key == "sk_from_file"
+
+
+def test_env_var_takes_priority_over_key_file(monkeypatch, tmp_path):
+    monkeypatch.setenv(API_KEY_ENV_VAR, "sk_from_env")
+    key_file = tmp_path / "pollinations_key"
+    key_file.write_text("sk_from_file\n")
+    monkeypatch.setattr(pollinations_module, "DEFAULT_KEY_FILE", key_file)
+    provider = PollinationsProvider(model="m")
+    assert provider._api_key == "sk_from_env"
+
+
+def test_explicit_api_key_overrides_both_env_and_file(monkeypatch, tmp_path):
+    monkeypatch.setenv(API_KEY_ENV_VAR, "sk_from_env")
+    key_file = tmp_path / "pollinations_key"
+    key_file.write_text("sk_from_file\n")
+    monkeypatch.setattr(pollinations_module, "DEFAULT_KEY_FILE", key_file)
     provider = PollinationsProvider(model="m", api_key="sk_explicit")
     assert provider._api_key == "sk_explicit"
 

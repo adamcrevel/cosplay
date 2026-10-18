@@ -63,12 +63,29 @@ browser, so it can't be done on your behalf — do this once:
      unchecked — this CLI only ever generates images, never manages the
      account (checking `usage` too doesn't hurt — it only enables reading
      your balance back, as the next step does).
-4. Copy the `sk_...` value shown (usually shown once) and export it:
-   ```sh
-   export POLLINATIONS_API_KEY=sk_...
-   ```
-   (Add that line to your shell profile to keep it across sessions. Never
-   commit it — `.gitignore` already excludes `.env`.)
+4. Copy the `sk_...` value shown (usually shown once) and save it **one of
+   two ways**:
+   - **Recommended: a key file**, so it works no matter what invokes
+     `cosplay` (your own terminal, or an agent running the `cosplay` skill
+     via a tool that doesn't source your shell profile — confirmed by
+     testing that a `~/.bashrc`/`~/.profile` export does *not* reach a
+     non-interactive tool invocation, which is the shape this runs under
+     when an agent calls it):
+     ```sh
+     mkdir -p ~/.cosplay
+     printf 'sk_...' > ~/.cosplay/pollinations_key
+     chmod 600 ~/.cosplay/pollinations_key
+     ```
+   - **Or an env var**, if you only ever run `cosplay` yourself from a
+     terminal where you've exported it:
+     ```sh
+     export POLLINATIONS_API_KEY=sk_...
+     ```
+     (Checked first if both are present.) Add that line to your shell
+     profile to keep it across your own terminal sessions — but note this
+     path alone won't reach every context `cosplay` might run in, per above.
+   Never commit either — `.gitignore` excludes `.env`, and `~/.cosplay/`
+   is outside any repo entirely.
 5. **Verify it actually took**, with two read-only calls that need no extra
    permission on the key:
    ```sh

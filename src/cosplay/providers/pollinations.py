@@ -6,13 +6,20 @@ the only one allowed to shell out to `omp`, and `gist_publish.py` the only
 one allowed to shell out to `gh`.
 
 Setup (one-time, manual -- see the project README): create a secret key at
-https://enter.pollinations.ai/keys (Sign in with GitHub), then export it as
-`POLLINATIONS_API_KEY`. Pollinations retired its hourly free-Pollen refill;
-claim a one-off Quest on the dashboard for free Pollen before creating the
-key, or the first request fails with a 402 until there's a balance to
-spend. At this module's default model's real, verified price (0.03
-Pollen/image flat), a typical small Quest claim covers dozens of images --
-not unlimited, so expect to revisit Quests occasionally for sustained use.
+https://enter.pollinations.ai/keys (Sign in with GitHub), then either
+export it as `POLLINATIONS_API_KEY` or save it to `~/.cosplay/pollinations_key`
+(see `DEFAULT_KEY_FILE`) -- the file is the recommended path: a shell
+profile export (`~/.bashrc`/`~/.profile`) only reaches *interactive* shells,
+confirmed by testing it does not reach a non-interactive tool invocation
+(the shape this CLI actually runs under when an agent invokes the `cosplay`
+skill), so an env-var-only setup can silently stop working outside a
+terminal you opened yourself. Pollinations retired its hourly free-Pollen
+refill; claim a one-off Quest on the dashboard for free Pollen before
+creating the key, or the first request fails with a 402 until there's a
+balance to spend. At this module's default model's real, verified price
+(0.03 Pollen/image flat), a typical small Quest claim covers dozens of
+images -- not unlimited, so expect to revisit Quests occasionally for
+sustained use.
 """
 
 import base64
@@ -20,12 +27,20 @@ import os
 
 import requests
 
+from cosplay.config import DEFAULT_STATE_DIR
 from cosplay.providers.base import ImageProvider, ImageProviderError
 
 EDITS_URL = "https://gen.pollinations.ai/v1/images/edits"
 
-#: Env var holding the Pollinations.ai secret key (`sk_...`).
+#: Env var holding the Pollinations.ai secret key (`sk_...`); checked first.
 API_KEY_ENV_VAR = "POLLINATIONS_API_KEY"
+
+#: Fallback file holding the key as its entire (whitespace-trimmed) content,
+#: checked when `API_KEY_ENV_VAR` is unset. Not git-ignored by this project
+#: specifically since it already lives outside any repo, under the user's
+#: home directory, alongside the rest of this tool's state
+#: (`cosplay.config.DEFAULT_STATE_DIR`) -- save it with `chmod 600`.
+DEFAULT_KEY_FILE = DEFAULT_STATE_DIR / "pollinations_key"
 
 
 class PollinationsProvider(ImageProvider):
@@ -38,20 +53,25 @@ class PollinationsProvider(ImageProvider):
             model: Pollinations model id, e.g.
                 `"black-forest-labs/flux.1-kontext-pro"`.
             api_key: Secret key to use. Falls back to the
-                `POLLINATIONS_API_KEY` env var when omitted; never hardcoded.
+                `POLLINATIONS_API_KEY` env var, then to `DEFAULT_KEY_FILE`'s
+                contents, when omitted; never hardcoded.
             timeout: Request timeout in seconds.
 
         Raises:
-            ImageProviderError: If no API key is given and
-                `POLLINATIONS_API_KEY` is not set.
+            ImageProviderError: If no API key is given, `POLLINATIONS_API_KEY`
+                is not set, and `DEFAULT_KEY_FILE` doesn't exist either.
         """
         self._model = model
         self._timeout = timeout
         key = api_key if api_key is not None else os.environ.get(API_KEY_ENV_VAR)
+        if not key and DEFAULT_KEY_FILE.exists():
+            key = DEFAULT_KEY_FILE.read_text(encoding="utf-8").strip()
         if not key:
             raise ImageProviderError(
-                f"{API_KEY_ENV_VAR} is not set. Create a secret key at "
-                "https://enter.pollinations.ai/keys (Sign in with GitHub) and export it."
+                f"{API_KEY_ENV_VAR} is not set and {DEFAULT_KEY_FILE} doesn't exist. "
+                "Create a secret key at https://enter.pollinations.ai/keys "
+                "(Sign in with GitHub), then either export it or save it to "
+                f"{DEFAULT_KEY_FILE} (chmod 600)."
             )
         self._api_key = key
 
