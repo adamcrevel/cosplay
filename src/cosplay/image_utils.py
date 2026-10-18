@@ -1,12 +1,13 @@
 """Make an image fit for inline display in a GitHub gist.
 
-GitHub's gist file viewer renders an attached image at its native pixel
-size -- confirmed live against a real gist: a 2784x2080 phone photo
-rendered full-size, overflowing the viewport with scrollbars, no
-responsive scaling applied at all. This module downscales anything over a
-reasonable display size before it's saved or published, so the gist (and
-the local copy under the run's output directory) never carries an
-oversized image in the first place.
+GitHub's gist file viewer renders an attached image at its exact native
+pixel size -- confirmed with a DOM measurement against a real gist, not
+assumed: `<img>.clientWidth` equaled `naturalWidth` exactly, zero
+responsive scaling (no `max-width` or similar). A 2784x2080 phone photo
+therefore overflows horizontally on any window narrower than ~2800px and
+forces several screens of vertical scroll regardless of window width.
+There is nothing CSS-side to lean on; the only real fix is to not publish
+an oversized image in the first place.
 
 While already decoding the image to check its size, this also corrects
 EXIF orientation (`ImageOps.exif_transpose`) -- phone photos routinely
@@ -18,11 +19,12 @@ import io
 
 from PIL import Image, ImageOps
 
-#: Longest edge, in pixels, an image is allowed to keep. Generously sized
-#: for a gist viewed on an ordinary screen -- large enough that a resized
-#: photo still looks sharp, small enough that it only ever needs to scroll
-#: vertically on a typical window, never both directions.
-MAX_DIMENSION = 1600
+#: Longest edge, in pixels, an image is allowed to keep. Since nothing on
+#: GitHub's side scales a gist image down, this has to be small enough to
+#: fit *without* responsive help on an ordinary narrow browser window (not
+#: just a wide one) while still looking sharp enough to judge a costume
+#: result by.
+MAX_DIMENSION = 900
 
 #: JPEG re-encode quality when a resize actually happens. Not used when no
 #: resize is needed -- the original bytes pass through untouched.
