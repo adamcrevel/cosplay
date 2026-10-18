@@ -4,14 +4,27 @@
 `gist_publish.publish_gist` are always patched on `cosplay.cli`'s own
 namespace so no real `omp`/Pollinations.ai/`gh` call ever happens -- those
 are covered by their own modules' tests. These only prove the CLI wires
-arguments, exit codes, and store updates correctly.
+arguments, exit codes, and store updates correctly. Photo/result fixtures
+are real (tiny) PIL-encoded images, not magic-byte placeholders, since
+`cli.py` runs every saved/published image through
+`image_utils.fit_for_display`, which actually decodes them.
 """
+
+import io
+
+from PIL import Image
 
 import cosplay.cli as cli_module
 from cosplay.cli import main
 from cosplay.providers.base import ImageProviderError
 from cosplay.store import Store
 from cosplay.vision import AnalysisResult, Candidate
+
+
+def _real_image_bytes(fmt: str, size=(10, 10)) -> bytes:
+    buf = io.BytesIO()
+    Image.new("RGB", size, "blue").save(buf, format=fmt)
+    return buf.getvalue()
 
 
 def _analysis_result(people_count=1, chosen_index=0):
@@ -41,7 +54,7 @@ class _FakeProvider:
         self.model = model
 
     def edit_image(self, *, image_bytes, image_filename, prompt):
-        return b"\x89PNG fake result bytes"
+        return _real_image_bytes("PNG")
 
 
 class _FailingProvider:
@@ -54,7 +67,7 @@ class _FailingProvider:
 
 def _photo(tmp_path):
     photo = tmp_path / "photo.jpg"
-    photo.write_bytes(b"\xff\xd8\xff fake jpeg bytes")
+    photo.write_bytes(_real_image_bytes("JPEG"))
     return photo
 
 

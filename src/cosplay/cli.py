@@ -12,6 +12,7 @@ from cosplay.config import (
     CosplayConfig,
 )
 from cosplay.gist_publish import GistPublishError, publish_gist
+from cosplay.image_utils import fit_for_display
 from cosplay.omp_client import OmpCallError, OmpTimeoutError
 from cosplay.prompt_builder import build_image_prompt
 from cosplay.providers.base import ImageProviderError
@@ -130,12 +131,21 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     run_dir = config.state_dir / "runs" / str(run_id)
     run_dir.mkdir(parents=True, exist_ok=True)
-    original_path = run_dir / f"original{config.image_path.suffix.lower()}"
-    result_path = run_dir / f"result{_sniff_extension(result_bytes)}"
+
+    # Full-resolution `original_bytes`/`result_bytes` already did their job
+    # (analysis, generation); what's saved and published is a display copy
+    # -- GitHub's gist viewer renders an image at native size with no
+    # responsive scaling, confirmed live against a real gist, so an
+    # unresized phone photo overflows the page with scrollbars.
+    original_display_bytes = fit_for_display(original_bytes)
+    result_display_bytes = fit_for_display(result_bytes)
+
+    original_path = run_dir / f"original{_sniff_extension(original_display_bytes)}"
+    result_path = run_dir / f"result{_sniff_extension(result_display_bytes)}"
     md_path = run_dir / "analysis.md"
 
-    original_path.write_bytes(original_bytes)
-    result_path.write_bytes(result_bytes)
+    original_path.write_bytes(original_display_bytes)
+    result_path.write_bytes(result_display_bytes)
     md_path.write_text(
         render_markdown(
             result, original_filename=original_path.name, result_filename=result_path.name
