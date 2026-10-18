@@ -10,12 +10,17 @@ from pathlib import Path
 DEFAULT_ANALYSIS_MODEL = "claude"
 
 #: Default Pollinations.ai model for the identity-preserving image edit.
-#: `paid_only: false` and ~0.000024 Pollen/image in Pollinations' live
-#: catalog (`GET /v1/models`) -- 1,250x cheaper than the Flux Kontext models,
-#: chosen specifically so a single free Quest Pollen claim covers a
-#: personal-use lifetime instead of running out after a handful of images.
+#: Real cost (NOT the catalog's `completionImageTokens` rate -- that field
+#: is per-token, and this model bills a flat 1 "token" per image, confirmed
+#: by generating a real image and reading `output_image_tokens: 1` back
+#: from `GET /account/key/usage`): 0.03 Pollen/image, flat. Also the only
+#: one of three real models tested (vs. openai/gpt-image-1.5 at 0.043/image
+#: and openai/gpt-image-1-mini at 0.0102/image) that actually extended a
+#: headshot to a full standing body instead of staying a bust/seated crop
+#: on the same prompt -- cheapest overall that's good at the one thing this
+#: tool actually needs.
 #: See https://gen.pollinations.ai/docs -> Image -> /v1/images/edits.
-DEFAULT_IMAGE_MODEL = "openai/gpt-image-1.5"
+DEFAULT_IMAGE_MODEL = "black-forest-labs/flux.1-kontext-pro"
 
 #: Default number of candidate costumes the analysis step proposes.
 DEFAULT_CANDIDATE_COUNT = 4

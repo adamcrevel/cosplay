@@ -27,7 +27,7 @@ Two other CLIs must already be installed and authenticated:
 - [`gh`](https://cli.github.com/) — publishes the gist. Run `gh auth login`
   (with the `gist` scope) if you haven't already.
 
-## One manual setup step: a Pollinations.ai key (free-tier friendly)
+## One manual setup step: a Pollinations.ai key
 
 Image generation calls [Pollinations.ai](https://pollinations.ai)'s
 `/v1/images/edits` endpoint. This needs **your own** GitHub login in a
@@ -42,24 +42,27 @@ browser, so it can't be done on your behalf — do this once:
    claim whatever's available. Skipping this is fine too; it just means your
    balance starts at 0 and the first real request fails with a `402` until
    you claim something (see the balance check below) — no surprise charge
-   either way, 402 just means "nothing to spend."
+   either way, 402 just means "nothing to spend." **Expect to come back and
+   claim another Quest periodically** — see the cost note below; this isn't
+   a one-time thing.
 3. Click **"Create secret key"** (or **"+ New key"**). In the dialog:
    - **Budget** — a numeric Pollen cap. This only *limits* spending from
      Pollen you already have; it is not a card charge and nothing is ever
-     auto-billed unless you separately buy Pollen. The default (`5`) is
-     already far more than you'll realistically need (see the cost note
-     below) — leave it, or set it lower as an extra safety ceiling.
+     auto-billed unless you separately buy Pollen. The default (`5`) works
+     fine; your actual balance (not the budget field) is the real ceiling.
    - **Expiry** — defaults to 7 days. If the dialog offers a longer option
      (30/90 days, or no expiry), pick that for a personal tool you'll keep
      using; otherwise you'll need to regenerate the key weekly.
    - **Models / permissions** — this is the part that controls whether the
      key can actually call image generation. Look for a "Models" or "Model
      access" section and check the **"image"** category (covers
-     `openai/gpt-image-1.5`, this project's default, plus any model you
-     swap to later), or search for and select that exact model id if you'd
-     rather scope it tighter. Leave the separate **account permissions**
-     (sometimes labeled `profile`/`usage`/`keys`) unchecked — this CLI only
-     ever generates images, never manages the account.
+     `black-forest-labs/flux.1-kontext-pro`, this project's default, plus
+     any model you swap to later), or search for and select that exact
+     model id if you'd rather scope it tighter. Leave the separate
+     **account permissions** (sometimes labeled `profile`/`usage`/`keys`)
+     unchecked — this CLI only ever generates images, never manages the
+     account (checking `usage` too doesn't hurt — it only enables reading
+     your balance back, as the next step does).
 4. Copy the `sk_...` value shown (usually shown once) and export it:
    ```sh
    export POLLINATIONS_API_KEY=sk_...
@@ -78,16 +81,27 @@ browser, so it can't be done on your behalf — do this once:
    any available) — `cosplay run` will reach image generation and fail with
    a clear `402` from Pollinations.ai until there's something to spend.
 
-**Cost, for context:** `openai/gpt-image-1.5` (this project's default) is
-`paid_only: false` in Pollinations' own catalog (`GET /v1/models`) at
-`~0.000024` Pollen per generated image (Pollen is priced at $1 each) —
-1,250x cheaper than the Flux Kontext models this project used at first.
-At that price, one small Quest Pollen claim (step 2) covers tens of
-thousands of images, which in practice turns the Quest step into a
-one-time thing rather than something to revisit. (We also checked Gemini,
-OpenAI direct, Stability, and Replicate: none of them let you generate a
-single image without first linking a card — Pollinations' Quest Pollen is
-the only no-card-at-all path that exists for this.)
+**Cost, for real** — measured by actually generating images and reading
+`GET /account/key/usage` and the balance delta back, not estimated from the
+catalog's per-token price (that number is easy to misread as per-image; an
+earlier version of this README did exactly that and was wrong):
+
+| Model | Real cost/image | Full-body result from a headshot? |
+| --- | --- | --- |
+| `black-forest-labs/flux.1-kontext-pro` (default) | **0.03 Pollen**, flat | Yes — extended to a full standing body |
+| `openai/gpt-image-1.5` | 0.043 Pollen | No — stayed a bust/seated crop |
+| `openai/gpt-image-1-mini` | 0.0102 Pollen | No — stayed a bust crop |
+
+`gpt-image-1-mini` is the cheapest of the three but didn't do the one thing
+this tool actually needs; `flux.1-kontext-pro` is the best balance of cost
+and the full-body requirement, so it's the default. At 0.03 Pollen/image, a
+typical small Quest reward (think low single digits of Pollen) covers
+**dozens** of runs, not thousands — plan to revisit the Quests page
+occasionally, not once ever. (We also checked Gemini, OpenAI direct,
+Stability, and Replicate: none of them let you generate a single image
+without first linking a card — Pollinations' Quest Pollen remains the only
+no-card-at-all path that exists for this, it's just not as cheap as
+originally advertised here.)
 
 ## Usage
 

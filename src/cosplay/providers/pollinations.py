@@ -10,8 +10,9 @@ https://enter.pollinations.ai/keys (Sign in with GitHub), then export it as
 `POLLINATIONS_API_KEY`. Pollinations retired its hourly free-Pollen refill;
 claim a one-off Quest on the dashboard for free Pollen before creating the
 key, or the first request fails with a 402 until there's a balance to
-spend. At this module's default model's price (~0.000024 Pollen/image), one
-small Quest claim covers tens of thousands of images.
+spend. At this module's default model's real, verified price (0.03
+Pollen/image flat), a typical small Quest claim covers dozens of images --
+not unlimited, so expect to revisit Quests occasionally for sustained use.
 """
 
 import base64
@@ -35,7 +36,7 @@ class PollinationsProvider(ImageProvider):
 
         Args:
             model: Pollinations model id, e.g.
-                `"openai/gpt-image-1.5"`.
+                `"black-forest-labs/flux.1-kontext-pro"`.
             api_key: Secret key to use. Falls back to the
                 `POLLINATIONS_API_KEY` env var when omitted; never hardcoded.
             timeout: Request timeout in seconds.
